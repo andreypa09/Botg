@@ -1,0 +1,17 @@
+#секретные данные
+.env
+
+#Виртуальное окружение
+venv/
+.venv/
+env/
+ENV/
+
+#Кэш python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+#настройки  сервисов
+.idea/
