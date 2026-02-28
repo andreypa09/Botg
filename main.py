@@ -1,6 +1,7 @@
 import requests
 import asyncio
 
+from aiogram.filters import CommandStart
 from aiohttp.hdrs import CONTENT_TYPE
 
 from config import Config, load_config
@@ -49,7 +50,19 @@ async def reply_photo(message: Message):
         photo = photo.file_id,
         caption = 'не присылай больше'
     )
-
+@dp.message(CommandStart)
+async def start(message: Message):
+    await message.answer('Привет, отправь свой любимый стикер!')
+@dp.message(F.sticker)
+async def is_sticker(message: Message):
+    sticker = message.sticker.file_id[-1]
+    await message.answer_sticker(
+        sticker,
+        caption = 'А вот мой'
+    )
+@dp.message(~F.sticker)
+async def is_not_sticker(message: Message):
+    await message.answer('Это не похоже на стикер. Отправь стикер!')
 async def main():
     await dp.start_polling(bot)
 if __name__ == '__main__':
