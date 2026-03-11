@@ -1,79 +1,34 @@
 from aiogram import Bot, Dispatcher, F
-from aiogram.filters import Command
 from aiogram.types import Message
-from requests import get
 from asyncio import run
 from config import BOT_TOKEN
-
+import os
 
 async def main():
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
+    @dp.message(F.photo | F.video)
+    async def get_photo_video(message: Message, bot: Bot):
+        print(f"[LOG] Пользователь {message.from_user.id} вызвал функцию get_photo_video")
+        os.makedirs("downloads", exist_ok=True)
+        if not message.photo:
+            file = await bot.get_file(message.video.file_id)
+            print(f'[LOG] Файл {file.file_unique_id} получен')
+            PATH = os.path.join("downloads", f"{file.file_unique_id}.jpg")
 
-    # @dp.message(Command(commands=['start']))
-    # async def start_handler(message: Message):
-    #     print(f"[LOG] пользователь {message.from_user.id, message.from_user.first_name} нажал на кнопку старт")
-    #
-    #     await message.answer(f'Привет {message.from_user.full_name}')
-    #
-    # # https://catfact.ninja/fact
-    # @dp.message(Command(commands=['catfact']))
-    # async def get_cat_fact(message: Message):
-    #     print(f'[LOG] Пользователь {message.from_user.id} вывел факт о кошках')
-    #     print('[LOG] Запрашиваю информацию с сервера')
-    #     response = get('https://catfact.ninja/fact')
-    #     print(f'[LOG] Получен результат со статусом {response.status_code}')
-    #     print(response.json()["length"])
-    #     await message.answer(response.json()["fact"])
-    #
-    # @dp.message(Command(commands=['breeds']))
-    # async def get_cat_breeds(message: Message):
-    #     print(f'[LOG] Пользователь {message.from_user.id} запрашивает породу кошки')
-    #     print('[LOG] Запрашиваю информацию с сервера')
-    #     response = get('https://catfact.ninja/breeds')
-    #     print(f'[LOG] Получен результат со статусом {response.status_code}')
-    #     response_json = response.json()
-    #     print(response_json['data'][0]['country'])
-    #     await message.answer(response_json["data"][0]['breed'])
-    #     print(f'[LOG] Пользователь {message.from_user.id} вывел породу кошки')
-    #
-    # @dp.message()
-    # async def text_handler(message: Message):
-    #     print(f"[LOG] Пользователь {message.from_user.id} ввел сообщение")
-    #     await message.answer('Не знаю такой команды')
-    #     # @dp.message(F.from_user.username.contains("a"))
-    #     # async def echo(message: Message):
-    #     #     await message.answer("привет")
-    #
-    # a = [5059184679, 12312321]
-    #
-    # @dp.message(F.from_user.id.in_(a), Command(commands=["secret"]))
-    # async def echo(message: Message):
-    #     await message.answer("Привет")
-    #
-    # @dp.message(F.text.in_("start"))
-    # async def handler(message: Message):
-    #     await message.answer("asda")
-    #
-    # # содержится в сообщении start
-    # @dp.message(F.text.contains("start"))
-    # async def handler(message: Message):
-    #     await message.answer(f"ПРивет {message.from_user.first_name}")
-    #
-    # @dp.message(F.from_user.username == (""))
-    # async def handler(message: Message):
-    #     await message.answer("sdasd")
-    #
-    #
-    # @dp.message(Command(commands=['start']))
-    # async def start_handler(message: Message):
-    #     print(f"[LOG] пользователь {message.from_user.id, message.from_user.first_name} нажал на кнопку старт")
-    #     await message.answer(f'Привет {message.from_user.full_name}')
+        else:
+            file = await bot.get_file(message.photo[-1].file_id)
+            print(f'[LOG] Файл {file.file_unique_id} получен')
+            PATH = os.path.join("downloads", f"{file.file_unique_id}.mp4")
+
+
+        await bot.download_file(file.file_path, destination=PATH)
+        print(f'[LOG] Файл {PATH} сохранен в соответствующую директорию')
+
+        await message.answer("крутое фото или видео")
 
 
     await dp.start_polling(bot)
-
-
 print(f'[LOG] Бот запущен.')
 if __name__ == '__main__':
     run(main()) # запускает цикла событий(dispatcher)
