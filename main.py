@@ -56,15 +56,33 @@ async def main():
             caption = 'не за что'
         )
         print(f"Видео {PATH} отправлено с локального сервера")
+        
     @dp.message(Command(commands = ['show']))
     async def show(message: Message):
         if os.path.exists("show.txt"):
-            with open("show.txt", "a") as f:
-                list_data = f.readlines()
-                for i in list_data:
-                    elements = i.split(":")
-                    await message.answer(f'Текущая температура на улице: {elements[1]}')
-                    await asyncio.sleep(10)
+            pass
+        else:
+            os.makedirs("show.txt", exist_ok = True)
+            with open("show.txt", "w") as f:
+                f.write("curs, temperature\n 60:20\n 55:12\n 67:13")
+        with open("show.txt", "r") as f:
+            next(f)
+            list_data = f.readlines()
+            print(list_data)
+            if list_data == []:
+                await message.answer("Данных нет")
+            else:
+                for index, item in enumerate(list_data):
+                    elements = item.split(":")
+                    if index == 0:
+                        await message.answer(f'Текущая температура на улице: {elements[1]}')
+                        await asyncio.sleep(10)
+                    else:
+                        await message.edit_text(f'Текущая температура на улице: {elements[1]}')
+                        await asyncio.sleep(10)
+
+                await message.delete()
+
 
     await dp.start_polling(bot)
 print(f'[LOG] Бот запущен.')
