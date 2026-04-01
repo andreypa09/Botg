@@ -1,6 +1,6 @@
 from aiogram import Bot, Dispatcher, F
-from aiogram.types import Message, FSInputFile
-from aiogram.filters import Command
+from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove
+from aiogram.filters import Command, CommandStart
 from asyncio import run
 from config import BOT_TOKEN
 import os
@@ -10,61 +10,59 @@ import asyncio
 async def main():
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
-    @dp.message(F.photo | F.video | F.voice)
-    async def get_photo_video(message: Message, bot: Bot):
-        print(f"[LOG] Пользователь {message.from_user.id} вызвал функцию get_photo_video")
-        os.makedirs("downloads", exist_ok=True)
-        if message.photo:
-            file = await bot.get_file(message.photo[-1].file_id)
-            print(f'[LOG] Файл {file.file_unique_id} получен')
-            PATH = os.path.join("downloads", f"{file.file_unique_id}.jpg")
-        elif message.voice:
-            file = await bot.get_file(message.voice.file_id)
-            PATH = os.path.join("downloads", f"{file.file_unique_id}.ogg")
-        else:
-            file = await bot.get_file(message.video.file_id)
-            print(f'[LOG] Файл {file.file_unique_id} получен')
-            PATH = os.path.join("downloads", f"{file.file_unique_id}.mp4")
 
-        print(f'[LOG] Файл {file} сохраняется в {PATH}')
-        await bot.download_file(file.file_path, destination=PATH)
-        print(f'[LOG] Файл {file} сохранен в {PATH}')
+    button_1 = KeyboardButton(text = 'Команда 1')
+    keyboard = ReplyKeyboardMarkup(keyboard=[[button_1]])
 
-        await message.answer("крутое фото или видео")
-
-    @dp.message(F.sticker)
-    async def sticker_handler(message: Message):
-        print(f"[LOG] Пользователь {message.from_user.id} вызвал функцию sticker_handler")
-        with open("stickers.txt", "a+") as f:
-            f.write(message.sticker.file_id + '\n')
-            print(f"[LOG] ID стикера {message.sticker.file_id} сохранен в stickers.txt")
-
-
-    @dp.message(F.text == 'Отправь фото')
-    async def send_video(message: Message):
-        print(f'[LOG] Пользователь {message.from_user.id} вызвал функцию send_video')
-        # await message.answer_photo(
-        #     photo = "https://pin.it/IcbS7Pdyk",
-        #     caption = "Это кот"
-        # )
-        PATH = os.path.join("files", "20260123_152149.mp4")
-        print("[LOG] Начало бинаризации")
-        video = FSInputFile(PATH)
-        print("[LOG] Конец бинаризации")
-        await message.answer_video(
-            video = video,
-            caption = 'не за что'
+    @dp.message(Command(commands=['start']))
+    async def start_handler(message: Message):
+        await message.answer(
+            text = 'Вот тебе клава',
+            reply_markup = keyboard
         )
-        print(f"Видео {PATH} отправлено с локального сервера")
-    @dp.message(Command(commands = ['show']))
-    async def show(message: Message):
-        if os.path.exists("show.txt"):
-            with open("show.txt", "a") as f:
-                list_data = f.readlines()
-                for i in list_data:
-                    elements = i.split(":")
-                    await message.answer(f'Текущая температура на улице: {elements[1]}')
-                    await asyncio.sleep(10)
+
+    @dp.message(F.text == 'Команда 1')
+    async def command_handler1(message: Message):
+        await message.answer(
+            text = 'Ты выбрал первую команду'
+        )
+
+    knopka_1 = KeyboardButton(text='Отправить номер телефона', request_contact=True)
+    knopka_2 = KeyboardButton(text='Отправить геолокацию', request_location=True)
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[[knopka_1, knopka_2]],  # Передаем туда кнопки, формируем клавиатуру
+        resize_keyboard=True,  # сжалась кнопка до высоты текста и ширины экрана телефона
+        input_field_placeholder="Клавиатура ...",
+        one_time_keyboard=True
+    )
+
+    @dp.message(Command(commands=['reg']))
+    async def start(message: Message):
+        await message.answer(
+            text="Выбери кнопку",
+            reply_markup=keyboard
+        )
+
+    @dp.message(F.text == 'Отправить номер телефона')
+    async def com1_handler(message: Message):
+        await message.answer(
+            text="Вот команда 1",
+            reply_markup=ReplyKeyboardRemove()
+        )
+
+    @dp.message(F.contact)
+    async def get_contact(message: Message):
+        data = message.contact.phone_number
+        with open("data.txt", "a") as f:
+            f.write(f'{message.from_user.username}-{data}\n')
+
+    @dp.message(F.location)
+    async def get_location(message: Message):
+        loc1 = message.location.latitude
+        loc2 = message.location.longitude
+        with open("data.txt", "a") as f:
+            f.write(f'{message.from_user.username}-{loc1};{loc2}\n')
+
 
     await dp.start_polling(bot)
 print(f'[LOG] Бот запущен.')
