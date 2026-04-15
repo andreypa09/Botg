@@ -50,3 +50,4 @@ async def process_username(message: Message, state: FSMContext):
     await message.answer(
         f"Ваше имя: {name}\nВаш юзернейм: {message.text}"
     )
+    await state.set_state(None)
