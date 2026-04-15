@@ -50,4 +50,5 @@ async def process_username(message: Message, state: FSMContext):
     await message.answer(
         f"Ваше имя: {name}\nВаш юзернейм: {message.text}"
     )
-    await state.set_state(None)
+    await state.set_state(None) # Заканчивает состояние
+    await state.clear() # Отчищает все данные и состояния
