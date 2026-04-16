@@ -6,8 +6,9 @@ from keyboards.menu_kb import menu_kb, menu_join_kb
 from aiogram.fsm.state import State, StatesGroup
 
 class Registration(StatesGroup):
+    waiting_class = State()
     waiting_name = State()
-    waiting_username = State()
+    waiting_contact = State()
 
 
 router = Router()
@@ -33,22 +34,33 @@ async def menu_handler(data: CallbackQuery):
 
 @router.callback_query(F.data == "join_sign_up")
 async def sign_up_handler(data: CallbackQuery, state: FSMContext):
-    await data.message.answer("Введите ваше имя:")
+    await data.message.answer("Введите ваш класс и школу:")
+    await state.set_state(Registration.waiting_class)
+
+@router.message(Registration.waiting_class)
+async def process_class(message: Message, state: FSMContext):
+    await message.answer("Введите ваше ФИО:")
+    await state.update_data(klass = message.text)
     await state.set_state(Registration.waiting_name)
 
+
+
 @router.message(Registration.waiting_name)
-async def process_handler(message: Message, state: FSMContext):
-    await message.answer("Введите юзернейм")
+async def process_name(message: Message, state: FSMContext):
+    await message.answer("Отправьте ваш контакт")
     await state.update_data(name = message.text)
-    await state.set_state(Registration.waiting_username)
+    await state.set_state(Registration.waiting_contact)
 
 
-@router.message(Registration.waiting_username)
-async def process_username(message: Message, state: FSMContext):
+@router.message(Registration.waiting_contact)
+async def process_contact(message: Message, state: FSMContext):
+    await state.update_data(contact = message.contact)
     state_data = await state.get_data()
+    klass = state_data.get("klass", "undefined")
     name = state_data.get("name", "undefined")
+    contact = state_data.get("contact", "undefined")
     await message.answer(
-        f"Ваше имя: {name}\nВаш юзернейм: {message.text}"
+        f"Ваш класс и школа: {klass}\nВаше имя: {name}\nВаш контакт: {contact}"
     )
     await state.set_state(None) # Заканчивает состояние
-    await state.clear() # Отчищает все данные и состояния
+    # await state.clear() # Отчищает все данные и состояния
